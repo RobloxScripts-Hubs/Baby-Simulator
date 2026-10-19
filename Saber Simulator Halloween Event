@@ -1,0 +1,486 @@
+-- Modern Orange-Themed Admin Panel UI Script
+-- Place this script inside StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Clean up ALL pre-existing GUI copies safely
+for _, gui in ipairs(PlayerGui:GetChildren()) do
+	if gui.Name == "SSHS" then
+		-- Untoggle features on this old copy first
+		local oldState = gui:FindFirstChild("StateValues")
+		if oldState then
+			for _, val in ipairs(oldState:GetChildren()) do
+				if val:IsA("BoolValue") then
+					val.Value = false
+				end
+			end
+		end
+		
+		-- Destroy after a brief 0.25s grace period
+		task.spawn(function()
+			task.wait(0.25)
+			if gui and gui.Parent then
+				gui:Destroy()
+			end
+		end)
+	end
+end
+
+-- State Tracking Variables
+local autoTpEnabled = false
+local autoLollipopEnabled = false
+local autoHcEggEnabled = false
+
+-- Configuration
+local ORANGE_THEME = Color3.fromRGB(255, 130, 20)
+local BG_COLOR = Color3.fromRGB(18, 18, 22)
+local HEADER_COLOR = Color3.fromRGB(28, 28, 35)
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SSHS"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = PlayerGui
+
+-- State Container for Cleanup Tracking
+local stateFolder = Instance.new("Folder")
+stateFolder.Name = "StateValues"
+stateFolder.Parent = screenGui
+
+local valBoss = Instance.new("BoolValue")
+valBoss.Name = "BossToggle"
+valBoss.Value = false
+valBoss.Parent = stateFolder
+
+local valLoli = Instance.new("BoolValue")
+valLoli.Name = "LoliToggle"
+valLoli.Value = false
+valLoli.Parent = stateFolder
+
+local valEgg = Instance.new("BoolValue")
+valEgg.Name = "EggToggle"
+valEgg.Value = false
+valEgg.Parent = stateFolder
+
+-- Main Container Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 420, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -200)
+mainFrame.BackgroundColor3 = BG_COLOR
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = ORANGE_THEME
+mainStroke.Thickness = 1.5
+mainStroke.Transparency = 0.2
+mainStroke.Parent = mainFrame
+
+-- Title Bar (Header)
+local titleBar = Instance.new("Frame")
+titleBar.Name = "TitleBar"
+titleBar.Size = UDim2.new(1, 0, 0, 42)
+titleBar.BackgroundColor3 = HEADER_COLOR
+titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = titleBar
+
+-- Title Text
+local titleText = Instance.new("TextLabel")
+titleText.Size = UDim2.new(1, -100, 1, 0)
+titleText.Position = UDim2.new(0, 15, 0, 0)
+titleText.BackgroundTransparency = 1
+titleText.Text = "🎃 Saber Simulator Halloween Script"
+titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleText.TextSize = 15
+titleText.Font = Enum.Font.GothamBold
+titleText.TextXAlignment = Enum.TextXAlignment.Left
+titleText.Parent = titleBar
+
+-- Button Helper Function
+local function createHeaderButton(name, text, color, posX)
+	local btn = Instance.new("TextButton")
+	btn.Name = name
+	btn.Size = UDim2.new(0, 26, 0, 26)
+	btn.Position = UDim2.new(1, posX, 0, 8)
+	btn.BackgroundColor3 = color
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.TextSize = 13
+	btn.Font = Enum.Font.GothamBold
+	btn.BorderSizePixel = 0
+	btn.Parent = titleBar
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
+
+	return btn
+end
+
+local closeBtn = createHeaderButton("CloseBtn", "X", Color3.fromRGB(220, 60, 60), -34)
+local minimizeBtn = createHeaderButton("MinimizeBtn", "—", Color3.fromRGB(50, 50, 60), -66)
+
+-- Content Frame
+local contentFrame = Instance.new("Frame")
+contentFrame.Name = "ContentFrame"
+contentFrame.Size = UDim2.new(1, -24, 1, -56)
+contentFrame.Position = UDim2.new(0, 12, 0, 48)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = contentFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 10)
+
+-- Helper function to create feature row with toggle button
+local function createFeatureRow(title)
+	local container = Instance.new("Frame")
+	container.Name = title .. "Container"
+	container.Size = UDim2.new(1, 0, 0, 50)
+	container.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
+	container.BorderSizePixel = 0
+	container.Parent = contentFrame
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = container
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(45, 45, 55)
+	stroke.Thickness = 1
+	stroke.Parent = container
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0.65, 0, 1, 0)
+	label.Position = UDim2.new(0, 12, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = title
+	label.TextColor3 = Color3.fromRGB(220, 220, 230)
+	label.TextSize = 13
+	label.Font = Enum.Font.GothamMedium
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = container
+
+	local btn = Instance.new("TextButton")
+	btn.Name = "ToggleBtn"
+	btn.Size = UDim2.new(0, 90, 0, 30)
+	btn.Position = UDim2.new(1, -100, 0.5, -15)
+	btn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+	btn.Text = "OFF"
+	btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+	btn.TextSize = 12
+	btn.Font = Enum.Font.GothamBold
+	btn.BorderSizePixel = 0
+	btn.Parent = container
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = btn
+
+	return btn
+end
+
+-- Feature UI Creation
+local bossToggleBtn = createFeatureRow("Auto-Teleport to Halloween Boss")
+local lollipopToggleBtn = createFeatureRow("Auto-Lollipop Farm")
+local hcEggToggleBtn = createFeatureRow("Auto - HC Egg")
+
+----------------------------------------------------
+-- RESTORE BUTTON
+----------------------------------------------------
+local restoreBtn = Instance.new("TextButton")
+restoreBtn.Name = "RestoreBtn"
+restoreBtn.Size = UDim2.new(0, 150, 0, 38)
+restoreBtn.Position = UDim2.new(0.5, -75, 0.9, -20)
+restoreBtn.BackgroundColor3 = BG_COLOR
+restoreBtn.Text = "🎃 Open Panel"
+restoreBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+restoreBtn.TextSize = 13
+restoreBtn.Font = Enum.Font.GothamBold
+restoreBtn.BorderSizePixel = 0
+restoreBtn.Visible = false
+restoreBtn.Parent = screenGui
+
+local restoreCorner = Instance.new("UICorner")
+restoreCorner.CornerRadius = UDim.new(0, 8)
+restoreCorner.Parent = restoreBtn
+
+local restoreStroke = Instance.new("UIStroke")
+restoreStroke.Color = ORANGE_THEME
+restoreStroke.Thickness = 1.5
+restoreStroke.Parent = restoreBtn
+
+----------------------------------------------------
+-- DRAGGABLE SYSTEM
+----------------------------------------------------
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+	local delta = input.Position - dragStart
+	mainFrame.Position = UDim2.new(
+		startPos.X.Scale,
+		startPos.X.Offset + delta.X,
+		startPos.Y.Scale,
+		startPos.Y.Offset + delta.Y
+	)
+end
+
+titleBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+titleBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+----------------------------------------------------
+-- MINIMIZE & CLOSE LOGIC
+----------------------------------------------------
+local isMinimized = false
+
+minimizeBtn.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	local targetSize = isMinimized and UDim2.new(0, 420, 0, 42) or UDim2.new(0, 420, 0, 400)
+	
+	contentFrame.Visible = not isMinimized
+	TweenService:Create(mainFrame, tweenInfo, {Size = targetSize}):Play()
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+	mainFrame.Visible = false
+	restoreBtn.Visible = true
+end)
+
+restoreBtn.MouseButton1Click:Connect(function()
+	mainFrame.Visible = true
+	restoreBtn.Visible = false
+end)
+
+----------------------------------------------------
+-- HALLOWEEN BOSS LOGIC
+----------------------------------------------------
+local originalPos = nil
+local teleportedToBoss = false
+local bossTargetPos = Vector3.new(799, 236, 1237)
+
+local function setBossState(enabled)
+	autoTpEnabled = enabled
+	valBoss.Value = enabled
+	
+	if autoTpEnabled then
+		bossToggleBtn.Text = "ON"
+		bossToggleBtn.BackgroundColor3 = ORANGE_THEME
+		bossToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	else
+		bossToggleBtn.Text = "OFF"
+		bossToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+		bossToggleBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+		
+		if teleportedToBoss and originalPos and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+			LocalPlayer.Character.HumanoidRootPart.CFrame = originalPos
+			teleportedToBoss = false
+			originalPos = nil
+		end
+	end
+end
+
+bossToggleBtn.MouseButton1Click:Connect(function()
+	setBossState(not autoTpEnabled)
+end)
+
+valBoss.Changed:Connect(function(val)
+	if val ~= autoTpEnabled then
+		setBossState(val)
+	end
+end)
+
+task.spawn(function()
+	while screenGui.Parent do
+		task.wait(0.5)
+		
+		if autoTpEnabled then
+			local char = LocalPlayer.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+			
+			local gameplay = workspace:FindFirstChild("Gameplay")
+			local regions = gameplay and gameplay:FindFirstChild("RegionsLoaded")
+			local eventFolder = regions and regions:FindFirstChild("HalloweenEvent")
+			local bossFolder = eventFolder and eventFolder:FindFirstChild("Boss")
+			local bossHolder = bossFolder and bossFolder:FindFirstChild("BossHolder")
+			
+			local hasBoss = bossHolder and (#bossHolder:GetChildren() > 0)
+			
+			if hrp then
+				if hasBoss and not teleportedToBoss then
+					originalPos = hrp.CFrame
+					hrp.CFrame = CFrame.new(bossTargetPos)
+					teleportedToBoss = true
+				elseif not hasBoss and teleportedToBoss then
+					if originalPos then
+						hrp.CFrame = originalPos
+					end
+					teleportedToBoss = false
+					originalPos = nil
+				end
+			end
+		end
+	end
+end)
+
+----------------------------------------------------
+-- AUTO - LOLLIPOP LOGIC (0.1s interval)
+----------------------------------------------------
+local function setLollipopState(enabled)
+	autoLollipopEnabled = enabled
+	valLoli.Value = enabled
+	
+	if autoLollipopEnabled then
+		lollipopToggleBtn.Text = "ON"
+		lollipopToggleBtn.BackgroundColor3 = ORANGE_THEME
+		lollipopToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	else
+		lollipopToggleBtn.Text = "OFF"
+		lollipopToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+		lollipopToggleBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+	end
+end
+
+lollipopToggleBtn.MouseButton1Click:Connect(function()
+	setLollipopState(not autoLollipopEnabled)
+end)
+
+valLoli.Changed:Connect(function(val)
+	if val ~= autoLollipopEnabled then
+		setLollipopState(val)
+	end
+end)
+
+local function getItemCFrame(item)
+	if item:IsA("BasePart") then
+		return item.CFrame
+	elseif item:IsA("Model") then
+		if item.PrimaryPart then
+			return item.PrimaryPart.CFrame
+		else
+			return item:GetPivot()
+		end
+	end
+	return nil
+end
+
+task.spawn(function()
+	while screenGui.Parent do
+		task.wait(0.05)
+		
+		if autoLollipopEnabled then
+			local char = LocalPlayer.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+			
+			local gameplay = workspace:FindFirstChild("Gameplay")
+			local regions = gameplay and gameplay:FindFirstChild("RegionsLoaded")
+			local eventFolder = regions and regions:FindFirstChild("HalloweenEvent")
+			local currencyPickup = eventFolder and eventFolder:FindFirstChild("CurrencyPickup")
+			local currencyHolder = currencyPickup and currencyPickup:FindFirstChild("CurrencyHolder")
+			
+			if hrp and currencyHolder then
+				local lollipops = currencyHolder:GetChildren()
+				
+				for _, item in ipairs(lollipops) do
+					if not autoLollipopEnabled then break end
+					
+					local itemCFrame = getItemCFrame(item)
+					if itemCFrame then
+						hrp.CFrame = itemCFrame
+						task.wait(0.1)
+					end
+				end
+			end
+		end
+	end
+end)
+
+----------------------------------------------------
+-- AUTO - HC EGG LOGIC
+----------------------------------------------------
+local eggTargetPos = Vector3.new(957, 233, 1140)
+
+local function setEggState(enabled)
+	autoHcEggEnabled = enabled
+	valEgg.Value = enabled
+	
+	if autoHcEggEnabled then
+		hcEggToggleBtn.Text = "ON"
+		hcEggToggleBtn.BackgroundColor3 = ORANGE_THEME
+		hcEggToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		
+		local char = LocalPlayer.Character
+		local hrp = char and char:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			hrp.CFrame = CFrame.new(eggTargetPos)
+		end
+	else
+		hcEggToggleBtn.Text = "OFF"
+		hcEggToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+		hcEggToggleBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+	end
+end
+
+hcEggToggleBtn.MouseButton1Click:Connect(function()
+	setEggState(not autoHcEggEnabled)
+end)
+
+valEgg.Changed:Connect(function(val)
+	if val ~= autoHcEggEnabled then
+		setEggState(val)
+	end
+end)
+
+task.spawn(function()
+	while screenGui.Parent do
+		task.wait(0.1)
+		
+		if autoHcEggEnabled then
+			local uiEvent = ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("UIAction")
+			if uiEvent then
+				uiEvent:FireServer("BuyEgg", "HC Egg")
+			end
+		end
+	end
+end)
