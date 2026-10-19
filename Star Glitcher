@@ -1,0 +1,587 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--------------------------------------------------------------------------------
+-- 1. GUI CONSTANTS & THEMING
+--------------------------------------------------------------------------------
+local THEME = {
+	Background   = Color3.fromRGB(15, 17, 26),
+	Header       = Color3.fromRGB(22, 25, 38),
+	TabActive    = Color3.fromRGB(0, 150, 255),
+	TabInactive  = Color3.fromRGB(28, 32, 48),
+	ButtonBg     = Color3.fromRGB(25, 29, 44),
+	ButtonHover  = Color3.fromRGB(0, 140, 220),
+	TextPrimary  = Color3.fromRGB(240, 245, 255),
+	TextSub      = Color3.fromRGB(140, 150, 175),
+	Border       = Color3.fromRGB(45, 52, 75),
+	Accent       = Color3.fromRGB(0, 170, 255)
+}
+
+--------------------------------------------------------------------------------
+-- 2. GUI CONSTRUCTION
+--------------------------------------------------------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "StarGlitcherGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 520, 0, 440)
+mainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+mainFrame.BackgroundColor3 = THEME.Background
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = mainFrame
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = THEME.Accent
+stroke.Thickness = 1.5
+stroke.Transparency = 0.4
+stroke.Parent = mainFrame
+
+-- Header Bar (Draggable)
+local headerBar = Instance.new("Frame")
+headerBar.Name = "HeaderBar"
+headerBar.Size = UDim2.new(1, 0, 0, 42)
+headerBar.BackgroundColor3 = THEME.Header
+headerBar.BorderSizePixel = 0
+headerBar.Parent = mainFrame
+
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 10)
+headerCorner.Parent = headerBar
+
+local titleText = Instance.new("TextLabel")
+titleText.Size = UDim2.new(0.5, 0, 1, 0)
+titleText.Position = UDim2.new(0.03, 0, 0, 0)
+titleText.BackgroundTransparency = 1
+titleText.Text = "★ STAR GLITCHER SYSTEM"
+titleText.TextColor3 = THEME.TextPrimary
+titleText.TextSize = 14
+titleText.Font = Enum.Font.GothamBold
+titleText.TextXAlignment = Enum.TextXAlignment.Left
+titleText.Parent = headerBar
+
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 28, 0, 28)
+minimizeBtn.Position = UDim2.new(1, -65, 0.5, -14)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(35, 40, 60)
+minimizeBtn.Text = "—"
+minimizeBtn.TextColor3 = THEME.TextPrimary
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 12
+minimizeBtn.Parent = headerBar
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minimizeBtn
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 28, 0, 28)
+closeBtn.Position = UDim2.new(1, -32, 0.5, -14)
+closeBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 60)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = THEME.TextPrimary
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 12
+closeBtn.Parent = headerBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeBtn
+
+-- Navigation Bar
+local navBar = Instance.new("Frame")
+navBar.Name = "NavBar"
+navBar.Size = UDim2.new(1, -20, 0, 32)
+navBar.Position = UDim2.new(0, 10, 0, 48)
+navBar.BackgroundTransparency = 1
+navBar.Parent = mainFrame
+
+local navList = Instance.new("UIListLayout")
+navList.FillDirection = Enum.FillDirection.Horizontal
+navList.Padding = UDim.new(0, 6)
+navList.Parent = navBar
+
+-- Content Container
+local bodyFrame = Instance.new("Frame")
+bodyFrame.Name = "BodyFrame"
+bodyFrame.Size = UDim2.new(1, -20, 1, -90)
+bodyFrame.Position = UDim2.new(0, 10, 0, 85)
+bodyFrame.BackgroundTransparency = 1
+bodyFrame.Parent = mainFrame
+
+--------------------------------------------------------------------------------
+-- 3. DRAGGING & WINDOW CONTROLS
+--------------------------------------------------------------------------------
+local dragging, dragInput, dragStart, startPos
+
+headerBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+headerBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		mainFrame.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+local isMinimized = false
+minimizeBtn.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	bodyFrame.Visible = not isMinimized
+	navBar.Visible = not isMinimized
+	local targetSize = isMinimized and UDim2.new(0, 520, 0, 42) or UDim2.new(0, 520, 0, 440)
+	TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = targetSize}):Play()
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+	screenGui:Destroy()
+end)
+
+--------------------------------------------------------------------------------
+-- 4. TAB SYSTEM
+--------------------------------------------------------------------------------
+local tabs = {}
+local activeTab = nil
+
+local function createTab(name)
+	local tabBtn = Instance.new("TextButton")
+	tabBtn.Size = UDim2.new(0.23, 0, 1, 0)
+	tabBtn.BackgroundColor3 = THEME.TabInactive
+	tabBtn.Text = name
+	tabBtn.TextColor3 = THEME.TextSub
+	tabBtn.Font = Enum.Font.GothamMedium
+	tabBtn.TextSize = 12
+	tabBtn.Parent = navBar
+
+	local tabCorner = Instance.new("UICorner")
+	tabCorner.CornerRadius = UDim.new(0, 6)
+	tabCorner.Parent = tabBtn
+
+	local page = Instance.new("ScrollingFrame")
+	page.Name = name .. "Page"
+	page.Size = UDim2.new(1, 0, 1, 0)
+	page.BackgroundTransparency = 1
+	page.BorderSizePixel = 0
+	page.ScrollBarThickness = 4
+	page.ScrollBarImageColor3 = THEME.Accent
+	page.Visible = false
+	page.Parent = bodyFrame
+
+	tabBtn.MouseButton1Click:Connect(function()
+		for _, tab in ipairs(tabs) do
+			tab.Page.Visible = false
+			tab.Btn.BackgroundColor3 = THEME.TabInactive
+			tab.Btn.TextColor3 = THEME.TextSub
+		end
+		page.Visible = true
+		tabBtn.BackgroundColor3 = THEME.TabActive
+		tabBtn.TextColor3 = THEME.TextPrimary
+		activeTab = page
+	end)
+
+	local tabData = {Btn = tabBtn, Page = page}
+	table.insert(tabs, tabData)
+	return page
+end
+
+local formationsPage = createTab("Formations")
+local miscPage       = createTab("Misc")
+local commandsPage   = createTab("Commands")
+local hatsPage       = createTab("Hats")
+
+-- Set Formations active by default
+tabs[1].Page.Visible = true
+tabs[1].Btn.BackgroundColor3 = THEME.TabActive
+tabs[1].Btn.TextColor3 = THEME.TextPrimary
+
+--------------------------------------------------------------------------------
+-- 5. HAT PHYSICS & FORMATIONS ENGINE
+--------------------------------------------------------------------------------
+local renderConnection = nil
+local currentModeName = "None"
+local hatPositions = {}
+local MAX_SPEED = 100
+local LERP_FACTOR = 0.18
+
+local function getHatHandles()
+	local character = player.Character or player.CharacterAdded:Wait()
+	local handles = {}
+	for _, accessory in ipairs(character:GetChildren()) do
+		if accessory:IsA("Accessory") then
+			local handle = accessory:FindFirstChild("Handle")
+			if handle then
+				table.insert(handles, handle)
+			end
+		end
+	end
+	return handles
+end
+
+local function prepareHandles(handles)
+	for _, handle in ipairs(handles) do
+		handle.Anchored = false
+		for _, v in ipairs(handle:GetChildren()) do
+			if v:IsA("Weld") or v:IsA("WeldConstraint") or v:IsA("Motor6D") then
+				v.Enabled = false
+			end
+		end
+	end
+end
+
+local function stopFormation()
+	if renderConnection then
+		renderConnection:Disconnect()
+		renderConnection = nil
+	end
+	hatPositions = {}
+end
+
+local function resetHats()
+	stopFormation()
+	currentModeName = "None"
+	for _, handle in ipairs(getHatHandles()) do
+		for _, v in ipairs(handle:GetChildren()) do
+			if v:IsA("Weld") or v:IsA("WeldConstraint") or v:IsA("Motor6D") then
+				v.Enabled = true
+			end
+		end
+	end
+end
+
+local function updateHatPhysics(handle, targetCFrame, dt, index)
+	if not hatPositions[index] then
+		hatPositions[index] = handle.CFrame.Position
+	end
+	local currentPos = hatPositions[index]
+	local targetPos = targetCFrame.Position
+	local interpolatedPos = currentPos:Lerp(targetPos, math.clamp(dt * (LERP_FACTOR * 60), 0, 1))
+	local delta = interpolatedPos - currentPos
+	local distance = delta.Magnitude
+	local maxDistanceThisFrame = MAX_SPEED * dt
+	if distance > maxDistanceThisFrame and distance > 0 then
+		interpolatedPos = currentPos + (delta.Unit * maxDistanceThisFrame)
+	end
+	hatPositions[index] = interpolatedPos
+	handle.CFrame = CFrame.new(interpolatedPos) * targetCFrame.Rotation
+end
+
+--------------------------------------------------------------------------------
+-- 6. FORMATIONS PAGE SETUP
+--------------------------------------------------------------------------------
+local grid = Instance.new("UIGridLayout")
+grid.CellSize = UDim2.new(0, 150, 0, 36)
+grid.CellPadding = UDim2.new(0, 8, 0, 8)
+grid.Parent = formationsPage
+
+grid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	formationsPage.CanvasSize = UDim2.new(0, 0, 0, grid.AbsoluteContentSize.Y + 20)
+end)
+
+local function addFormationButton(name, callback)
+	local btn = Instance.new("TextButton")
+	btn.BackgroundColor3 = THEME.ButtonBg
+	btn.Text = name
+	btn.TextColor3 = THEME.TextPrimary
+	btn.Font = Enum.Font.GothamMedium
+	btn.TextSize = 11
+	btn.TextWrapped = true
+	btn.Parent = formationsPage
+
+	local bCorner = Instance.new("UICorner")
+	bCorner.CornerRadius = UDim.new(0, 6)
+	bCorner.Parent = btn
+
+	local bStroke = Instance.new("UIStroke")
+	bStroke.Color = THEME.Border
+	bStroke.Thickness = 1
+	bStroke.Parent = btn
+
+	btn.MouseButton1Click:Connect(function()
+		stopFormation()
+		currentModeName = name
+		local handles = getHatHandles()
+		prepareHandles(handles)
+		local timer = 0
+		renderConnection = RunService.RenderStepped:Connect(function(dt)
+			local char = player.Character
+			if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+			local root = char.HumanoidRootPart
+			local count = #handles
+			if count == 0 then return end
+			timer = timer + dt
+			callback(handles, root, count, timer, dt)
+		end)
+	end)
+end
+
+local f = {}
+f["Back Sphere"] = function(h, r, c, t, dt)
+	local center = r.CFrame * CFrame.new(0, 1, 3.5)
+	for i, handle in ipairs(h) do
+		local phi = math.acos(1 - 2 * (i - 0.5) / c)
+		local theta = math.pi * (1 + 5^0.5) * i + (t * 2.5)
+		local rad = 3.5
+		local target = center * CFrame.new(rad * math.sin(phi) * math.cos(theta), rad * math.sin(phi) * math.sin(theta), rad * math.cos(phi))
+		updateHatPhysics(handle, target, dt, i)
+	end
+end
+
+f["Back Ring"] = function(h, r, c, t, dt)
+	local center = r.CFrame * CFrame.new(0, 1.2, 3)
+	for i, handle in ipairs(h) do
+		local ang = (t * 3.5) + ((i / c) * math.pi * 2)
+		local target = center * CFrame.new(math.cos(ang) * 4, math.sin(ang) * 4, 0) * CFrame.Angles(0, 0, ang)
+		updateHatPhysics(handle, target, dt, i)
+	end
+end
+
+f["Head Sweep"] = function(h, r, c, t, dt)
+	local center = r.CFrame * CFrame.new(0, 3.5, 0)
+	for i, handle in ipairs(h) do
+		local offset = ((i - (c / 2)) * 1.2)
+		local sweep = math.sin(t * 4 + i) * 1.5
+		local target = center * CFrame.new(offset, 0, sweep)
+		updateHatPhysics(handle, target, dt, i)
+	end
+end
+
+f["Hip Orbit"] = function(h, r, c, t, dt)
+	local center = r.CFrame * CFrame.new(0, -1, 0)
+	for i, handle in ipairs(h) do
+		local ang = (t * 4) + ((i / c) * math.pi * 2)
+		local target = center * CFrame.new(math.cos(ang) * 3, 0, math.sin(ang) * 3)
+		updateHatPhysics(handle, target, dt, i)
+	end
+end
+
+f["Head Halo"] = function(h, r, c, t, dt)
+	local center = r.CFrame * CFrame.new(0, 4, 0)
+	for i, handle in ipairs(h) do
+		local ang = (t * 3) + ((i / c) * math.pi * 2)
+		local target = center * CFrame.new(math.cos(ang) * 2.5, math.sin(t * 2 + i) * 0.3, math.sin(ang) * 2.5)
+		updateHatPhysics(handle, target, dt, i)
+	end
+end
+
+f["Wing Spread"] = function(h, r, c, t, dt)
+	local center = r.CFrame * CFrame.new(0, 1.5, 2)
+	for i, handle in ipairs(h) do
+		local side = (i % 2 == 0) and 1 or -1
+		local idx = math.ceil(i / 2)
+		local flap = math.sin(t * 3) * 0.4
+		local target = center * CFrame.new(side * (idx * 1.2), (idx * 0.7) + flap, idx * 0.2)
+		updateHatPhysics(handle, target, dt, i)
+	end
+end
+
+for idx = 7, 50 do
+	local name = "Formation #" .. idx
+	f[name] = function(h, r, c, t, dt)
+		for i, handle in ipairs(h) do
+			local ang = (t * (2 + (idx % 4))) + ((i / c) * math.pi * 2)
+			local rad = 2 + (idx % 3)
+			local y = math.sin(t * 3 + (i * idx)) * 1.5
+			local target = r.CFrame * CFrame.new(math.cos(ang) * rad, y, math.sin(ang) * rad)
+			updateHatPhysics(handle, target, dt, i)
+		end
+	end
+end
+
+for name, cb in pairs(f) do addFormationButton(name, cb) end
+
+--------------------------------------------------------------------------------
+-- 7. MISC PAGE SETUP
+--------------------------------------------------------------------------------
+local miscList = Instance.new("UIListLayout")
+miscList.Padding = UDim.new(0, 8)
+miscList.Parent = miscPage
+
+miscList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	miscPage.CanvasSize = UDim2.new(0, 0, 0, miscList.AbsoluteContentSize.Y + 20)
+end)
+
+local function createMiscButton(text, cb)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -10, 0, 36)
+	btn.BackgroundColor3 = THEME.ButtonBg
+	btn.Text = text
+	btn.TextColor3 = THEME.TextPrimary
+	btn.Font = Enum.Font.GothamMedium
+	btn.TextSize = 13
+	btn.Parent = miscPage
+	local bc = Instance.new("UICorner") bc.CornerRadius = UDim.new(0, 6) bc.Parent = btn
+	local bs = Instance.new("UIStroke") bs.Color = THEME.Border bs.Parent = btn
+	btn.MouseButton1Click:Connect(cb)
+end
+
+createMiscButton("🔄 Reset Hats", function() resetHats() end)
+createMiscButton("💀 Respawn / Reset Character", function()
+	local char = player.Character
+	if char and char:FindFirstChild("Humanoid") then char.Humanoid.Health = 0 end
+end)
+createMiscButton("🪑 Force Sit", function()
+	local char = player.Character
+	if char and char:FindFirstChild("Humanoid") then char.Humanoid.Sit = true end
+end)
+
+--------------------------------------------------------------------------------
+-- 8. COMMANDS PAGE SETUP
+--------------------------------------------------------------------------------
+local cmdLayout = Instance.new("UIListLayout")
+cmdLayout.Padding = UDim.new(0, 8)
+cmdLayout.Parent = commandsPage
+
+local inputContainer = Instance.new("Frame")
+inputContainer.Size = UDim2.new(1, -10, 0, 36)
+inputContainer.BackgroundColor3 = THEME.ButtonBg
+inputContainer.Parent = commandsPage
+local ic = Instance.new("UICorner") ic.CornerRadius = UDim.new(0, 6) ic.Parent = inputContainer
+
+local cmdBox = Instance.new("TextBox")
+cmdBox.Size = UDim2.new(0.75, -10, 1, 0)
+cmdBox.Position = UDim2.new(0, 8, 0, 0)
+cmdBox.BackgroundTransparency = 1
+cmdBox.PlaceholderText = "Enter command (ws 50, jp 100, sit)..."
+cmdBox.Text = ""
+cmdBox.TextColor3 = THEME.TextPrimary
+cmdBox.PlaceholderColor3 = THEME.TextSub
+cmdBox.Font = Enum.Font.Gotham
+cmdBox.TextSize = 12
+cmdBox.TextXAlignment = Enum.TextXAlignment.Left
+cmdBox.Parent = inputContainer
+
+local runBtn = Instance.new("TextButton")
+runBtn.Size = UDim2.new(0.25, 0, 1, 0)
+runBtn.Position = UDim2.new(0.75, 0, 0, 0)
+runBtn.BackgroundColor3 = THEME.Accent
+runBtn.Text = "RUN"
+runBtn.TextColor3 = THEME.TextPrimary
+runBtn.Font = Enum.Font.GothamBold
+runBtn.TextSize = 12
+runBtn.Parent = inputContainer
+local rc = Instance.new("UICorner") rc.CornerRadius = UDim.new(0, 6) rc.Parent = runBtn
+
+local consoleBox = Instance.new("ScrollingFrame")
+consoleBox.Size = UDim2.new(1, -10, 0, 220)
+consoleBox.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
+consoleBox.BorderSizePixel = 0
+consoleBox.ScrollBarThickness = 4
+consoleBox.Parent = commandsPage
+local cc = Instance.new("UICorner") cc.CornerRadius = UDim.new(0, 6) cc.Parent = consoleBox
+
+local consoleList = Instance.new("UIListLayout")
+consoleList.Padding = UDim.new(0, 4)
+consoleList.Parent = consoleBox
+
+local function logConsole(msg)
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -10, 0, 18)
+	label.BackgroundTransparency = 1
+	label.Text = " > " .. msg
+	label.TextColor3 = THEME.TextPrimary
+	label.Font = Enum.Font.Code
+	label.TextSize = 11
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = consoleBox
+	consoleBox.CanvasSize = UDim2.new(0, 0, 0, consoleList.AbsoluteContentSize.Y + 10)
+end
+
+local function executeCommand(cmdStr)
+	if cmdStr == "" then return end
+	logConsole(cmdStr)
+	local args = string.split(cmdStr, " ")
+	local cmd = string.lower(args[1] or "")
+	local val = tonumber(args[2])
+	local char = player.Character
+	local hum = char and char:FindFirstChild("Humanoid")
+
+	if cmd == "ws" or cmd == "walkspeed" then
+		if hum and val then hum.WalkSpeed = val logConsole("WalkSpeed set to " .. val) end
+	elseif cmd == "jp" or cmd == "jumppower" then
+		if hum and val then hum.UseJumpPower = true hum.JumpPower = val logConsole("JumpPower set to " .. val) end
+	elseif cmd == "sit" then
+		if hum then hum.Sit = true logConsole("Character sitting.") end
+	elseif cmd == "clear" then
+		for _, child in ipairs(consoleBox:GetChildren()) do
+			if child:IsA("TextLabel") then child:Destroy() end
+		end
+	else
+		logConsole("Unknown command: " .. cmd)
+	end
+end
+
+runBtn.MouseButton1Click:Connect(function() executeCommand(cmdBox.Text) cmdBox.Text = "" end)
+cmdBox.FocusLost:Connect(function(enter) if enter then executeCommand(cmdBox.Text) cmdBox.Text = "" end end)
+
+--------------------------------------------------------------------------------
+-- 9. HATS PAGE SETUP (BROWSER, 3D PREVIEW & ID COPY)
+--------------------------------------------------------------------------------
+local hatsLayout = Instance.new("UIListLayout")
+hatsLayout.Padding = UDim.new(0, 8)
+hatsLayout.Parent = hatsPage
+
+-- Search box header for hats
+local hatSearchBox = Instance.new("TextBox")
+hatSearchBox.Size = UDim2.new(1, -10, 0, 36)
+hatSearchBox.BackgroundColor3 = THEME.ButtonBg
+hatSearchBox.PlaceholderText = "Search hat names or IDs..."
+hatsLayout.Parent = hatsPage
+hatSearchBox.Text = ""
+hatSearchBox.TextColor3 = THEME.TextPrimary
+hatSearchBox.PlaceholderColor3 = THEME.TextSub
+hatSearchBox.Font = Enum.Font.Gotham
+hatSearchBox.TextSize = 12
+hatSearchBox.Parent = hatsPage
+local hsc = Instance.new("UICorner") hsc.CornerRadius = UDim.new(0, 6) hsc.Parent = hatSearchBox
+local hss = Instance.new("UIStroke") hss.Color = THEME.Border hss.Parent = hatSearchBox
+
+-- 3D Viewport Frame Container for live preview
+local viewportFrame = Instance.new("ViewportFrame")
+viewportFrame.Size = UDim2.new(1, -10, 0, 140)
+viewportFrame.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
+viewportFrame.BorderSizePixel = 0
+viewportFrame.Parent = hatsPage
+local vpc = Instance.new("UICorner") vpc.CornerRadius = UDim.new(0, 6) vpc.Parent = viewportFrame
+local vps = Instance.new("UIStroke") vps.Color = THEME.Border vps.Parent = viewportFrame
+
+-- Camera & Model setup inside Viewport
+local vpCamera = Instance.new("Camera")
+viewportFrame.CurrentCamera = vpCamera
+vpCamera.Parent = viewportFrame
+
+local previewModel = Instance.new("Model")
+previewModel.Name = "PreviewCharacter"
+previewModel.Parent
