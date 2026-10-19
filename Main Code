@@ -1,0 +1,500 @@
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Destroy any old versions of the GUI named "BabySimulatorScript" cleanly
+for _, gui in ipairs(playerGui:GetChildren()) do
+	if gui.Name == "BabySimulatorScript" then
+		-- Find any active toggles inside and force them off/cleanup before destroying
+		local mainFr = gui:FindFirstChild("MainFrame")
+		if mainFr then
+			-- Disable King Farm connection if it was running on the old GUI
+			pcall(function()
+				local char = player.Character
+				if char then
+					local humanoid = char:FindFirstChildOfClass("Humanoid")
+					if humanoid then humanoid.PlatformStand = false end
+				end
+			end)
+		end
+		gui:Destroy()
+	end
+end
+
+-- --- 1. BUILD GUI HIERARCHY PROGRAMMATICALLY ---
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BabySimulatorScript"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 260, 0, 280)
+mainFrame.Position = UDim2.new(0.5, -130, 0.5, -140)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(50, 50, 58)
+mainStroke.Thickness = 1
+mainStroke.Parent = mainFrame
+
+-- Title Label (Drag Handle)
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(1, 0, 0, 36)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "  Baby Simulator Script"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+titleLabel.TextSize = 14
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = mainFrame
+
+-- Close Button ("X")
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 30, 0, 36)
+closeButton.Position = UDim2.new(1, -35, 0, 0)
+closeButton.BackgroundTransparency = 1
+closeButton.Text = "X"
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextColor3 = Color3.fromRGB(200, 70, 70)
+closeButton.TextSize = 14
+closeButton.Parent = mainFrame
+
+-- Minimize Button ("-")
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Name = "MinimizeButton"
+minimizeButton.Size = UDim2.new(0, 30, 0, 36)
+minimizeButton.Position = UDim2.new(1, -65, 0, 0)
+minimizeButton.BackgroundTransparency = 1
+minimizeButton.Text = "-"
+minimizeButton.Font = Enum.Font.GothamBold
+minimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+minimizeButton.TextSize = 16
+minimizeButton.Parent = mainFrame
+
+-- Tab Bar Container (Just below top bar)
+local tabBar = Instance.new("Frame")
+tabBar.Name = "TabBar"
+tabBar.Size = UDim2.new(1, -20, 0, 28)
+tabBar.Position = UDim2.new(0, 10, 0, 38)
+tabBar.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+tabBar.BorderSizePixel = 0
+tabBar.Parent = mainFrame
+
+local tabCorner = Instance.new("UICorner")
+tabCorner.CornerRadius = UDim.new(0, 6)
+tabCorner.Parent = tabBar
+
+-- Main Tab Button
+local mainTabBtn = Instance.new("TextButton")
+mainTabBtn.Name = "MainTabButton"
+mainTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
+mainTabBtn.BackgroundTransparency = 0
+mainTabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+mainTabBtn.BorderSizePixel = 0
+mainTabBtn.Text = "Main"
+mainTabBtn.Font = Enum.Font.GothamBold
+mainTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+mainTabBtn.TextSize = 12
+mainTabBtn.Parent = tabBar
+
+local mainTabCorner = Instance.new("UICorner")
+mainTabCorner.CornerRadius = UDim.new(0, 6)
+mainTabCorner.Parent = mainTabBtn
+
+-- Misc Tab Button
+local miscTabBtn = Instance.new("TextButton")
+miscTabBtn.Name = "MiscTabButton"
+miscTabBtn.Size = UDim2.new(0.5, 0, 1, 0)
+miscTabBtn.Position = UDim2.new(0.5, 0, 0, 0)
+miscTabBtn.BackgroundTransparency = 1
+miscTabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+miscTabBtn.BorderSizePixel = 0
+miscTabBtn.Text = "Misc"
+miscTabBtn.Font = Enum.Font.GothamMedium
+miscTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+miscTabBtn.TextSize = 12
+miscTabBtn.Parent = tabBar
+
+local miscTabCorner = Instance.new("UICorner")
+miscTabCorner.CornerRadius = UDim.new(0, 6)
+miscTabCorner.Parent = miscTabBtn
+
+-- Content Containers
+local mainContainer = Instance.new("Frame")
+mainContainer.Name = "MainContainer"
+mainContainer.Size = UDim2.new(1, 0, 1, -74)
+mainContainer.Position = UDim2.new(0, 0, 0, 74)
+mainContainer.BackgroundTransparency = 1
+mainContainer.Visible = true
+mainContainer.Parent = mainFrame
+
+local miscContainer = Instance.new("Frame")
+miscContainer.Name = "MiscContainer"
+miscContainer.Size = UDim2.new(1, 0, 1, -74)
+miscContainer.Position = UDim2.new(0, 0, 0, 74)
+miscContainer.BackgroundTransparency = 1
+miscContainer.Visible = false
+miscContainer.Parent = mainFrame
+
+-- Open Button (Larger Re-open button with a cool 'B')
+local openButton = Instance.new("TextButton")
+openButton.Name = "OpenButton"
+openButton.Size = UDim2.new(0, 48, 0, 48)
+openButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+openButton.BorderSizePixel = 0
+openButton.Text = "B"
+openButton.Font = Enum.Font.GothamBold
+openButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+openButton.TextSize = 20
+openButton.Visible = false
+openButton.Parent = screenGui
+
+local openCorner = Instance.new("UICorner")
+openCorner.CornerRadius = UDim.new(0, 24)
+openCorner.Parent = openButton
+
+local openStroke = Instance.new("UIStroke")
+openStroke.Color = Color3.fromRGB(50, 50, 58)
+openStroke.Thickness = 1
+openStroke.Parent = openButton
+
+-- State Variables & Persistent Memory Table
+local isMinimized = false
+local firstClose = true
+local savedToggles = {
+	AutoHappiness = false,
+	AutoRebirth = false,
+	KingFarm = false,
+	SuperSpeed = false,
+}
+local previouslyHiddenElements = {}
+local kingFarmConnection = nil
+
+-- --- 2. DRAGGABLE IMPLEMENTATION ---
+local function makeDraggable(guiObject, dragHandle)
+	local dragging, dragStart, startPos
+	dragHandle = dragHandle or guiObject
+
+	dragHandle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = guiObject.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			guiObject.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+end
+
+makeDraggable(mainFrame, titleLabel)
+makeDraggable(openButton)
+
+-- --- 3. WINDOW & TAB CONTROLS ---
+closeButton.MouseButton1Click:Connect(function()
+	if firstClose then
+		local absPos = closeButton.AbsolutePosition
+		openButton.Position = UDim2.new(0, absPos.X, 0, absPos.Y)
+		firstClose = false
+	end
+	
+	mainFrame.Visible = false
+	openButton.Visible = true
+end)
+
+openButton.MouseButton1Click:Connect(function()
+	mainFrame.Visible = true
+	openButton.Visible = false
+end)
+
+minimizeButton.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	tabBar.Visible = not isMinimized
+	mainContainer.Visible = not isMinimized and (mainContainer.Parent == mainFrame and mainTabBtn.BackgroundTransparency == 0)
+	miscContainer.Visible = not isMinimized and miscContainer.Visible
+	
+	if isMinimized then
+		mainFrame.Size = UDim2.new(0, mainFrame.AbsoluteSize.X, 0, 36)
+	else
+		mainFrame.Size = UDim2.new(0, 260, 0, 280)
+	end
+end)
+
+-- Tab Switching Logic
+mainTabBtn.MouseButton1Click:Connect(function()
+	mainContainer.Visible = true
+	miscContainer.Visible = false
+	mainTabBtn.BackgroundTransparency = 0
+	mainTabBtn.Font = Enum.Font.GothamBold
+	mainTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	miscTabBtn.BackgroundTransparency = 1
+	miscTabBtn.Font = Enum.Font.GothamMedium
+	miscTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+end)
+
+miscTabBtn.MouseButton1Click:Connect(function()
+	miscContainer.Visible = true
+	mainContainer.Visible = false
+	miscTabBtn.BackgroundTransparency = 0
+	miscTabBtn.Font = Enum.Font.GothamBold
+	miscTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	mainTabBtn.BackgroundTransparency = 1
+	mainTabBtn.Font = Enum.Font.GothamMedium
+	mainTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+end)
+
+-- --- 4. TOGGLE BUILDER HELPER ---
+local function createToggle(parentContainer, name, keyName, yPosition, callback)
+	local btn = Instance.new("TextButton")
+	btn.Name = name .. "Button"
+	btn.Size = UDim2.new(1, -20, 0, 34)
+	btn.Position = UDim2.new(0, 10, 0, yPosition)
+	btn.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
+	btn.BorderSizePixel = 0
+	btn.Text = name .. ": OFF"
+	btn.Font = Enum.Font.GothamMedium
+	btn.TextSize = 13
+	btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+	btn.Parent = parentContainer
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(50, 50, 58)
+	stroke.Thickness = 1
+	stroke.Parent = btn
+
+	local function updateVisuals(activeState)
+		if activeState then
+			btn.BackgroundColor3 = Color3.fromRGB(16, 124, 65)
+			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			btn.Text = name .. ": ON"
+		else
+			btn.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
+			btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+			btn.Text = name .. ": OFF"
+		end
+	end
+
+	if savedToggles[keyName] then
+		updateVisuals(true)
+		task.defer(function()
+			callback(true)
+		end)
+	end
+
+	btn.MouseButton1Click:Connect(function()
+		savedToggles[keyName] = not savedToggles[keyName]
+		updateVisuals(savedToggles[keyName])
+		callback(savedToggles[keyName])
+	end)
+end
+
+local function createButton(parentContainer, name, yPosition, callback)
+	local btn = Instance.new("TextButton")
+	btn.Name = name .. "Button"
+	btn.Size = UDim2.new(1, -20, 0, 34)
+	btn.Position = UDim2.new(0, 10, 0, yPosition)
+	btn.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
+	btn.BorderSizePixel = 0
+	btn.Text = name
+	btn.Font = Enum.Font.GothamMedium
+	btn.TextSize = 13
+	btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+	btn.Parent = parentContainer
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(50, 50, 58)
+	stroke.Thickness = 1
+	stroke.Parent = btn
+
+	btn.MouseButton1Click:Connect(callback)
+end
+
+-- --- 5. MAIN TAB FEATURES ---
+
+-- Auto Happiness (Fires remote event AND auto-equips "Baby Bottle" tool every 0.1s)
+createToggle(mainContainer, "Auto Happiness", "AutoHappiness", 8, function(state)
+	if state then
+		task.spawn(function()
+			while savedToggles.AutoHappiness do
+				pcall(function()
+					local event = ReplicatedStorage.Remotes:FindFirstChild("Input")
+					if event then
+						event:FireServer()
+					end
+
+					local char = player.Character
+					local bp = player:FindFirstChild("Backpack")
+					if char and bp then
+						local bottle = bp:FindFirstChild("Baby Bottle") or char:FindFirstChild("Baby Bottle")
+						local humanoid = char:FindFirstChildOfClass("Humanoid")
+						if bottle and humanoid and bottle.Parent == bp then
+							humanoid:EquipTool(bottle)
+						end
+					end
+				end)
+				task.wait(0.1)
+			end
+		end)
+	end
+end)
+
+-- Auto Rebirth
+createToggle(mainContainer, "Auto Rebirth", "AutoRebirth", 50, function(state)
+	if state then
+		previouslyHiddenElements = {}
+		task.spawn(function()
+			while savedToggles.AutoRebirth do
+				pcall(function()
+					for _, child in ipairs(Lighting:GetChildren()) do
+						if child:IsA("BlurEffect") then
+							child.Enabled = false
+						end
+					end
+
+					local mainFolder = playerGui:FindFirstChild("Main", true)
+					if mainFolder then
+						for _, descendant in ipairs(mainFolder:GetDescendants()) do
+							if descendant:IsA("Frame") or descendant:IsA("ImageLabel") or descendant:IsA("ImageButton") then
+								if descendant.Visible and not table.find(previouslyHiddenElements, descendant) then
+									table.insert(previouslyHiddenElements, descendant)
+									descendant.Visible = false
+								end
+							end
+						end
+					end
+					
+					local rebirthEvent = ReplicatedStorage.Remotes:FindFirstChild("RequestRebirth")
+					if rebirthEvent then
+						rebirthEvent:InvokeServer()
+					end
+				end)
+				task.wait(1)
+			end
+		end)
+	else
+		pcall(function()
+			for _, element in ipairs(previouslyHiddenElements) do
+				if element and element.Parent then
+					element.Visible = true
+				end
+			end
+			previouslyHiddenElements = {}
+		end)
+	end
+end)
+
+-- King - Farm Toggle (Perfect position lock + velocity zeroing to eliminate camera/character jitter)
+createToggle(mainContainer, "King - Farm", "KingFarm", 92, function(state)
+	if state then
+		if kingFarmConnection then kingFarmConnection:Disconnect() end
+		kingFarmConnection = RunService.RenderStepped:Connect(function()
+			pcall(function()
+				local char = player.Character
+				if char then
+					local rootPart = char:FindFirstChild("HumanoidRootPart")
+					local humanoid = char:FindFirstChildOfClass("Humanoid")
+					if rootPart then
+						rootPart.CFrame = CFrame.new(1302, 496, -92)
+						rootPart.AssemblyLinearVelocity = Vector3.zero
+						rootPart.AssemblyAngularVelocity = Vector3.zero
+					end
+					if humanoid then
+						humanoid.PlatformStand = true
+					end
+				end
+			end)
+		end)
+	else
+		if kingFarmConnection then
+			kingFarmConnection:Disconnect()
+			kingFarmConnection = nil
+		end
+		pcall(function()
+			local char = player.Character
+			if char then
+				local humanoid = char:FindFirstChildOfClass("Humanoid")
+				if humanoid then
+					humanoid.PlatformStand = false
+				end
+			end
+		end)
+	end
+end)
+
+
+-- --- 6. MISC TAB FEATURES ---
+
+createButton(miscContainer, "Inf Yield", 8, function()
+	-- ==========================================
+	loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Infinite-yeild-fe-14386"))()
+	-- ==========================================
+end)
+
+createButton(miscContainer, "Fly Gui", 50, function()
+	-- ==========================================
+      loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-INVINCIBLE-FLY-BOTH-MOBILE-AND-PC-SUPPORT-204712"))()
+	-- ==========================================
+end)
+
+-- Super Speed Toggle
+createToggle(miscContainer, "Super Speed", "SuperSpeed", 92, function(state)
+	if state then
+		task.spawn(function()
+			while savedToggles.SuperSpeed do
+				pcall(function()
+					local character = player.Character
+					if character and character:FindFirstChild("Humanoid") then
+						character.Humanoid.WalkSpeed = 250
+					end
+				end)
+				task.wait(0.2)
+			end
+		end)
+	else
+		pcall(function()
+			local character = player.Character
+			if character and character:FindFirstChild("Humanoid") then
+				character.Humanoid.WalkSpeed = 16
+			end
+		end)
+	end
+end)
