@@ -439,13 +439,13 @@ end)
 
 createButton(miscContainer, "Inf Yield", 8, function()
 	-- ==========================================
-	
+	loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Infinite-yeild-fe-14386"))()
 	-- ==========================================
 end)
 
 createButton(miscContainer, "Fly Gui", 50, function()
 	-- ==========================================
-	
+	loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-INVINCIBLE-FLY-BOTH-MOBILE-AND-PC-SUPPORT-204712"))()
 	-- ==========================================
 end)
 
