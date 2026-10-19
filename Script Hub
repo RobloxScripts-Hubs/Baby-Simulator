@@ -1,0 +1,522 @@
+-- Modern Clean Script Hub GUI (Light Grey Theme - Roblox Studio)
+-- Place this script inside StarterPlayer -> StarterPlayerScripts or StarterGui as a LocalScript.
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+--------------------------------------------------------------------------------
+-- CUSTOM CODES CONFIGURATION
+-- Paste your custom code lines directly inside these functions.
+--------------------------------------------------------------------------------
+local CUSTOM_CODES = {
+	Essentials = {
+		["1"] = function()
+			-- 1
+		end,
+		["2"] = function()
+			-- 2
+		end,
+	},
+	Scripts = {
+		["1"]  = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/RobloxScripts-Hubs/Baby-Simulator/refs/heads/main/Saber%20Simulator%20Halloween%20Event"))() end,
+		["2"]  = function() -- 2 end,
+		["3"]  = function() -- 3 end,
+		["4"]  = function() -- 4 end,
+		["5"]  = function() -- 5 end,
+		["6"]  = function() -- 6 end,
+		["7"]  = function() -- 7 end,
+		["8"]  = function() -- 8 end,
+		["9"]  = function() -- 9 end,
+		["10"] = function() -- 10 end,
+		["11"] = function() -- 11 end,
+		["12"] = function() -- 12 end,
+		["13"] = function() -- 13 end,
+		["14"] = function() -- 14 end,
+		["15"] = function() -- 15 end,
+		["16"] = function() -- 16 end,
+		["17"] = function() -- 17 end,
+	},
+	Other = {
+		["Option 1"] = function()
+			-- 1
+		end,
+		["Option 2"] = function()
+			-- 2
+		end,
+	}
+}
+
+--------------------------------------------------------------------------------
+-- UI CREATION
+--------------------------------------------------------------------------------
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ModernScriptHub"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+-- Main Frame (Light Grey Theme)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 480, 0, 360)
+MainFrame.Position = UDim2.new(0.5, -240, 0.5, -180)
+MainFrame.BackgroundColor3 = Color3.fromRGB(240, 242, 245)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+local MainUICorner = Instance.new("UICorner")
+MainUICorner.CornerRadius = UDim.new(0, 8)
+MainUICorner.Parent = MainFrame
+
+local MainUIStroke = Instance.new("UIStroke")
+MainUIStroke.Color = Color3.fromRGB(210, 215, 222)
+MainUIStroke.Thickness = 1
+MainUIStroke.Parent = MainFrame
+
+-- Top Bar
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 38)
+TopBar.BackgroundColor3 = Color3.fromRGB(228, 232, 238)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopBarCorner = Instance.new("UICorner")
+TopBarCorner.CornerRadius = UDim.new(0, 8)
+TopBarCorner.Parent = TopBar
+
+local TopBarCover = Instance.new("Frame")
+TopBarCover.Size = UDim2.new(1, 0, 0, 8)
+TopBarCover.Position = UDim2.new(0, 0, 1, -8)
+TopBarCover.BackgroundColor3 = Color3.fromRGB(228, 232, 238)
+TopBarCover.BorderSizePixel = 0
+TopBarCover.Parent = TopBar
+
+-- Title Text
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -90, 1, 0)
+Title.Position = UDim2.new(0, 12, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Script Hub"
+Title.TextColor3 = Color3.fromRGB(60, 65, 75)
+Title.TextSize = 14
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+-- Close Button
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 28, 0, 26)
+CloseBtn.Position = UDim2.new(1, -32, 0.5, -13)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(235, 238, 243)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(90, 95, 105)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 12
+CloseBtn.Parent = TopBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseBtn
+
+-- Minimize Button
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.new(0, 28, 0, 26)
+MinimizeBtn.Position = UDim2.new(1, -64, 0.5, -13)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(235, 238, 243)
+MinimizeBtn.Text = "─"
+MinimizeBtn.TextColor3 = Color3.fromRGB(90, 95, 105)
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.TextSize = 12
+MinimizeBtn.Parent = TopBar
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 6)
+MinCorner.Parent = MinimizeBtn
+
+-- Reopen Floating Button
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Name = "OpenHubBtn"
+OpenBtn.Size = UDim2.new(0, 100, 0, 34)
+OpenBtn.Position = UDim2.new(0, 20, 1, -54)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(240, 242, 245)
+OpenBtn.Text = "Open Hub"
+OpenBtn.TextColor3 = Color3.fromRGB(60, 65, 75)
+OpenBtn.Font = Enum.Font.GothamBold
+OpenBtn.TextSize = 12
+OpenBtn.Visible = false
+OpenBtn.Parent = ScreenGui
+
+local OpenCorner = Instance.new("UICorner")
+OpenCorner.CornerRadius = UDim.new(0, 6)
+OpenCorner.Parent = OpenBtn
+
+local OpenStroke = Instance.new("UIStroke")
+OpenStroke.Color = Color3.fromRGB(210, 215, 222)
+OpenStroke.Thickness = 1
+OpenStroke.Parent = OpenBtn
+
+-- Content Area
+local ContentArea = Instance.new("Frame")
+ContentArea.Size = UDim2.new(1, -24, 1, -54)
+ContentArea.Position = UDim2.new(0, 12, 0, 46)
+ContentArea.BackgroundTransparency = 1
+ContentArea.Parent = MainFrame
+
+--------------------------------------------------------------------------------
+-- NAVIGATION TABS SYSTEM
+--------------------------------------------------------------------------------
+local Tabs = {}
+
+local function createTabFrame(name)
+	local frame = Instance.new("Frame")
+	frame.Name = name .. "Tab"
+	frame.Size = UDim2.new(1, 0, 1, 0)
+	frame.BackgroundTransparency = 1
+	frame.Visible = false
+	frame.Parent = ContentArea
+	Tabs[name] = frame
+	return frame
+end
+
+local MainMenuTab = createTabFrame("MainMenu")
+local ScriptsTab = createTabFrame("Scripts")
+local EssentialsTab = createTabFrame("Essentials")
+local OtherTab = createTabFrame("Other")
+
+MainMenuTab.Visible = true
+
+local function switchTab(tabName)
+	for name, frame in pairs(Tabs) do
+		frame.Visible = (name == tabName)
+	end
+end
+
+--------------------------------------------------------------------------------
+-- 1. MAIN MENU (2x2 GRID)
+--------------------------------------------------------------------------------
+local GridFrame = Instance.new("Frame")
+GridFrame.Size = UDim2.new(1, 0, 1, 0)
+GridFrame.BackgroundTransparency = 1
+GridFrame.Parent = MainMenuTab
+
+local UIGridLayout = Instance.new("UIGridLayout")
+UIGridLayout.CellSize = UDim2.new(0.5, -6, 0.5, -6)
+UIGridLayout.CellPadding = UDim2.new(0, 12, 0, 12)
+UIGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+UIGridLayout.Parent = GridFrame
+
+local menuButtons = {
+	{ Name = "Scripts", Enabled = true },
+	{ Name = "Essentials", Enabled = true },
+	{ Name = "Other", Enabled = true },
+	{ Name = "---", Enabled = false }
+}
+
+for _, config in ipairs(menuButtons) do
+	local btn = Instance.new("TextButton")
+	btn.Name = config.Name .. "Btn"
+	btn.BackgroundColor3 = Color3.fromRGB(250, 252, 255)
+	btn.Text = config.Name
+	btn.TextColor3 = config.Enabled and Color3.fromRGB(60, 65, 75) or Color3.fromRGB(160, 165, 175)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 15
+	btn.Parent = GridFrame
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(220, 225, 232)
+	stroke.Thickness = 1
+	stroke.Parent = btn
+
+	if config.Enabled then
+		btn.MouseButton1Click:Connect(function()
+			if Tabs[config.Name] then
+				switchTab(config.Name)
+			end
+		end)
+	end
+end
+
+--------------------------------------------------------------------------------
+-- HELPER: Create Sub-Tab Layout with Back Button
+--------------------------------------------------------------------------------
+local function setupSubTab(tabFrame, titleText)
+	local backBtn = Instance.new("TextButton")
+	backBtn.Size = UDim2.new(0, 70, 0, 26)
+	backBtn.Position = UDim2.new(0, 0, 0, 0)
+	backBtn.BackgroundColor3 = Color3.fromRGB(235, 238, 243)
+	backBtn.Text = "Back"
+	backBtn.TextColor3 = Color3.fromRGB(80, 85, 95)
+	backBtn.Font = Enum.Font.GothamBold
+	backBtn.TextSize = 12
+	backBtn.Parent = tabFrame
+
+	local backCorner = Instance.new("UICorner")
+	backCorner.CornerRadius = UDim.new(0, 6)
+	backCorner.Parent = backBtn
+
+	backBtn.MouseButton1Click:Connect(function()
+		switchTab("MainMenu")
+	end)
+
+	local headerLabel = Instance.new("TextLabel")
+	headerLabel.Size = UDim2.new(1, -80, 0, 26)
+	headerLabel.Position = UDim2.new(0, 80, 0, 0)
+	headerLabel.BackgroundTransparency = 1
+	headerLabel.Text = titleText
+	headerLabel.TextColor3 = Color3.fromRGB(80, 85, 95)
+	headerLabel.Font = Enum.Font.GothamBold
+	headerLabel.TextSize = 13
+	headerLabel.TextXAlignment = Enum.TextXAlignment.Left
+	headerLabel.Parent = tabFrame
+
+	local scrollContainer = Instance.new("ScrollingFrame")
+	scrollContainer.Size = UDim2.new(1, 0, 1, -34)
+	scrollContainer.Position = UDim2.new(0, 0, 0, 34)
+	scrollContainer.BackgroundTransparency = 1
+	scrollContainer.BorderSizePixel = 0
+	scrollContainer.ScrollBarThickness = 3
+	scrollContainer.ScrollBarImageColor3 = Color3.fromRGB(200, 205, 212)
+	scrollContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scrollContainer.Parent = tabFrame
+
+	return scrollContainer
+end
+
+--------------------------------------------------------------------------------
+-- 2. SCRIPTS TAB (1 through 17)
+--------------------------------------------------------------------------------
+local scriptsScroll = setupSubTab(ScriptsTab, "Scripts Section")
+
+local scriptsLayout = Instance.new("UIListLayout")
+scriptsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+scriptsLayout.Padding = UDim.new(0, 6)
+scriptsLayout.Parent = scriptsScroll
+
+for i = 1, 17 do
+	local key = tostring(i)
+	local rowFrame = Instance.new("Frame")
+	rowFrame.Size = UDim2.new(1, -6, 0, 32)
+	rowFrame.BackgroundColor3 = Color3.fromRGB(250, 252, 255)
+	rowFrame.Parent = scriptsScroll
+
+	local rowCorner = Instance.new("UICorner")
+	rowCorner.CornerRadius = UDim.new(0, 6)
+	rowCorner.Parent = rowFrame
+
+	local rowStroke = Instance.new("UIStroke")
+	rowStroke.Color = Color3.fromRGB(225, 230, 238)
+	rowStroke.Thickness = 1
+	rowStroke.Parent = rowFrame
+
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 65, 1, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(238, 242, 248)
+	btn.Text = key
+	btn.TextColor3 = Color3.fromRGB(60, 65, 75)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 12
+	btn.Parent = rowFrame
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = btn
+
+	local codeLine = Instance.new("TextLabel")
+	codeLine.Size = UDim2.new(1, -75, 1, 0)
+	codeLine.Position = UDim2.new(0, 73, 0, 0)
+	codeLine.BackgroundTransparency = 1
+	codeLine.Text = " -- " .. key
+	codeLine.TextColor3 = Color3.fromRGB(110, 115, 125)
+	codeLine.Font = Enum.Font.Code
+	codeLine.TextSize = 11
+	codeLine.TextXAlignment = Enum.TextXAlignment.Left
+	codeLine.Parent = rowFrame
+
+	btn.MouseButton1Click:Connect(function()
+		if CUSTOM_CODES.Scripts[key] then
+			CUSTOM_CODES.Scripts[key]()
+		end
+	end)
+end
+
+scriptsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scriptsScroll.CanvasSize = UDim2.new(0, 0, 0, scriptsLayout.AbsoluteContentSize.Y + 8)
+end)
+
+--------------------------------------------------------------------------------
+-- 3. ESSENTIALS TAB (1 & 2)
+--------------------------------------------------------------------------------
+local essentialsScroll = setupSubTab(EssentialsTab, "Essentials Section")
+
+local essentialsLayout = Instance.new("UIListLayout")
+essentialsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+essentialsLayout.Padding = UDim.new(0, 6)
+essentialsLayout.Parent = essentialsScroll
+
+for idx = 1, 2 do
+	local key = tostring(idx)
+	local rowFrame = Instance.new("Frame")
+	rowFrame.Size = UDim2.new(1, -6, 0, 32)
+	rowFrame.BackgroundColor3 = Color3.fromRGB(250, 252, 255)
+	rowFrame.Parent = essentialsScroll
+
+	local rowCorner = Instance.new("UICorner")
+	rowCorner.CornerRadius = UDim.new(0, 6)
+	rowCorner.Parent = rowFrame
+
+	local rowStroke = Instance.new("UIStroke")
+	rowStroke.Color = Color3.fromRGB(225, 230, 238)
+	rowStroke.Thickness = 1
+	rowStroke.Parent = rowFrame
+
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 65, 1, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(238, 242, 248)
+	btn.Text = key
+	btn.TextColor3 = Color3.fromRGB(60, 65, 75)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 12
+	btn.Parent = rowFrame
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = btn
+
+	local codeLine = Instance.new("TextLabel")
+	codeLine.Size = UDim2.new(1, -75, 1, 0)
+	codeLine.Position = UDim2.new(0, 73, 0, 0)
+	codeLine.BackgroundTransparency = 1
+	codeLine.Text = " -- " .. key
+	codeLine.TextColor3 = Color3.fromRGB(110, 115, 125)
+	codeLine.Font = Enum.Font.Code
+	codeLine.TextSize = 11
+	codeLine.TextXAlignment = Enum.TextXAlignment.Left
+	codeLine.Parent = rowFrame
+
+	btn.MouseButton1Click:Connect(function()
+		if CUSTOM_CODES.Essentials[key] then
+			CUSTOM_CODES.Essentials[key]()
+		end
+	end)
+end
+
+essentialsScroll.CanvasSize = UDim2.new(0, 0, 0, essentialsLayout.AbsoluteContentSize.Y + 8)
+
+--------------------------------------------------------------------------------
+-- 4. OTHER TAB
+--------------------------------------------------------------------------------
+local otherScroll = setupSubTab(OtherTab, "Other Section")
+
+local otherLayout = Instance.new("UIListLayout")
+otherLayout.SortOrder = Enum.SortOrder.LayoutOrder
+otherLayout.Padding = UDim.new(0, 6)
+otherLayout.Parent = otherScroll
+
+local otherIndex = 1
+for name, codeFunc in pairs(CUSTOM_CODES.Other) do
+	local key = tostring(otherIndex)
+	local rowFrame = Instance.new("Frame")
+	rowFrame.Size = UDim2.new(1, -6, 0, 32)
+	rowFrame.BackgroundColor3 = Color3.fromRGB(250, 252, 255)
+	rowFrame.Parent = otherScroll
+
+	local rowCorner = Instance.new("UICorner")
+	rowCorner.CornerRadius = UDim.new(0, 6)
+	rowCorner.Parent = rowFrame
+
+	local rowStroke = Instance.new("UIStroke")
+	rowStroke.Color = Color3.fromRGB(225, 230, 238)
+	rowStroke.Thickness = 1
+	rowStroke.Parent = rowFrame
+
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 95, 1, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(238, 242, 248)
+	btn.Text = name
+	btn.TextColor3 = Color3.fromRGB(60, 65, 75)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 11
+	btn.Parent = rowFrame
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = btn
+
+	local codeLine = Instance.new("TextLabel")
+	codeLine.Size = UDim2.new(1, -105, 1, 0)
+	codeLine.Position = UDim2.new(0, 103, 0, 0)
+	codeLine.BackgroundTransparency = 1
+	codeLine.Text = " -- " .. key
+	codeLine.TextColor3 = Color3.fromRGB(110, 115, 125)
+	codeLine.Font = Enum.Font.Code
+	codeLine.TextSize = 11
+	codeLine.TextXAlignment = Enum.TextXAlignment.Left
+	codeLine.Parent = rowFrame
+
+	btn.MouseButton1Click:Connect(codeFunc)
+	otherIndex = otherIndex + 1
+end
+
+otherScroll.CanvasSize = UDim2.new(0, 0, 0, otherLayout.AbsoluteContentSize.Y + 8)
+
+--------------------------------------------------------------------------------
+-- DRAGGABLE LOGIC
+--------------------------------------------------------------------------------
+local dragging, dragInput, dragStart, startPos
+
+TopBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = MainFrame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+TopBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		MainFrame.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+--------------------------------------------------------------------------------
+-- WINDOW CONTROLS
+--------------------------------------------------------------------------------
+CloseBtn.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	OpenBtn.Visible = true
+end)
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	OpenBtn.Visible = true
+end)
+
+OpenBtn.MouseButton1Click:Connect(function()
+	MainFrame.Visible = true
+	OpenBtn.Visible = false
+end)
