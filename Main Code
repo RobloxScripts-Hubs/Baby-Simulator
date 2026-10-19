@@ -8,21 +8,18 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Destroy any old versions of the GUI named "BabySimulatorScript" cleanly
+-- Destroy any old versions of the GUI cleanly and turn off toggles first
 for _, gui in ipairs(playerGui:GetChildren()) do
 	if gui.Name == "BabySimulatorScript" then
-		-- Find any active toggles inside and force them off/cleanup before destroying
-		local mainFr = gui:FindFirstChild("MainFrame")
-		if mainFr then
-			-- Disable King Farm connection if it was running on the old GUI
-			pcall(function()
-				local char = player.Character
-				if char then
-					local humanoid = char:FindFirstChildOfClass("Humanoid")
-					if humanoid then humanoid.PlatformStand = false end
+		pcall(function()
+			local char = player.Character
+			if char then
+				local humanoid = char:FindFirstChildOfClass("Humanoid")
+				if humanoid then 
+					humanoid.PlatformStand = false 
 				end
-			end)
-		end
+			end
+		end)
 		gui:Destroy()
 	end
 end
@@ -183,7 +180,6 @@ local savedToggles = {
 	KingFarm = false,
 	SuperSpeed = false,
 }
-local previouslyHiddenElements = {}
 local kingFarmConnection = nil
 
 -- --- 2. DRAGGABLE IMPLEMENTATION ---
@@ -377,28 +373,15 @@ createToggle(mainContainer, "Auto Happiness", "AutoHappiness", 8, function(state
 	end
 end)
 
--- Auto Rebirth
+-- Auto Rebirth (Fires remote event and prevents screen blur without hiding any GUI elements)
 createToggle(mainContainer, "Auto Rebirth", "AutoRebirth", 50, function(state)
 	if state then
-		previouslyHiddenElements = {}
 		task.spawn(function()
 			while savedToggles.AutoRebirth do
 				pcall(function()
 					for _, child in ipairs(Lighting:GetChildren()) do
 						if child:IsA("BlurEffect") then
 							child.Enabled = false
-						end
-					end
-
-					local mainFolder = playerGui:FindFirstChild("Main", true)
-					if mainFolder then
-						for _, descendant in ipairs(mainFolder:GetDescendants()) do
-							if descendant:IsA("Frame") or descendant:IsA("ImageLabel") or descendant:IsA("ImageButton") then
-								if descendant.Visible and not table.find(previouslyHiddenElements, descendant) then
-									table.insert(previouslyHiddenElements, descendant)
-									descendant.Visible = false
-								end
-							end
 						end
 					end
 					
@@ -409,15 +392,6 @@ createToggle(mainContainer, "Auto Rebirth", "AutoRebirth", 50, function(state)
 				end)
 				task.wait(1)
 			end
-		end)
-	else
-		pcall(function()
-			for _, element in ipairs(previouslyHiddenElements) do
-				if element and element.Parent then
-					element.Visible = true
-				end
-			end
-			previouslyHiddenElements = {}
 		end)
 	end
 end)
@@ -465,13 +439,13 @@ end)
 
 createButton(miscContainer, "Inf Yield", 8, function()
 	-- ==========================================
-	loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Infinite-yeild-fe-14386"))()
+	
 	-- ==========================================
 end)
 
 createButton(miscContainer, "Fly Gui", 50, function()
 	-- ==========================================
-      loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-INVINCIBLE-FLY-BOTH-MOBILE-AND-PC-SUPPORT-204712"))()
+	
 	-- ==========================================
 end)
 
